@@ -95,7 +95,7 @@ int main()
 		//
 		Mat imgFrame1Clone = imgFrame1.clone();
 		Mat imgFrame2Clone = imgFrame2.clone();
-
+		
 		//
 		//
 		Mat imgDifference, imgThresh;
