@@ -1,15 +1,10 @@
 ﻿#include<opencv2/core/core.hpp>
 #include<opencv2/highgui/highgui.hpp>
 #include<opencv2/imgproc/imgproc.hpp>
-#include "opencv2/opencv.hpp"
 #include "opencv2\video\background_segm.hpp"
-#include <opencv/cv.h>
-#include<iostream>
-#include<vector>
+
 #include "Ctracker.h"
 #include "Blob.h"
-using namespace std;
-using namespace cv;
 Scalar Colors[] = { Scalar(255,0,0),
 Scalar(0,0,255),
 Scalar(255,255,0),
@@ -137,17 +132,18 @@ int main()
 	capVid.read(imgFrame1); // read a frame
 	while (capVid.isOpened() && EscKeyCheck != 27)
 	{
+		/*OBJECT DETECTION*/
 		Mat imgDifference, imgThresh;
 		Mat imgFrame1Clone = imgFrame1.clone();
 		cvtColor(imgFrame1Clone, imgFrame1Clone, CV_BGR2GRAY);
 
 		int thresh = 50;
-		absdiff(imgFrame1Clone, result.clone(), imgDifference);
+		absdiff(imgFrame1Clone, result.clone(), imgDifference); // image subtraction
 
 		threshold(imgDifference, imgThresh, thresh, 255.0, CV_THRESH_BINARY);
 		imshow("imgThresh", imgThresh); //show image thresholded
 		
-		
+		//make blobs
 		for (int i = 0; i < imgThresh.rows; i++)
 		{
 			for (int j = 0; j < imgThresh.cols; j++)
@@ -217,16 +213,10 @@ int main()
 			centers.push_back(center);
 		}
 
-		/*for (int i = 0; i < trace_point.size(); i++)
-		{
-		rectangle(imgFrame1, Rect(trace_point[i].x, trace_point[i].y, 1, 1), Scalar(255, 0, 0), 2);
-		}*/
+		//delete old blobs
 		b.clear();
 		imshow("Input", imgFrame1);
-		/*------------------------------------*/
-		
-		
-		
+		/*------------TRACKING OBJECTS--------------*/
 		if (centers.size()>0)
 		{
 			tracker.Update(centers);
@@ -248,13 +238,16 @@ int main()
 				}
 			}
 		}
-		imshow("Input", imgFrame1);
+		imshow("Input", imgFrame1); //show frames
 		b.clear();
+		//check stopping condition
 		waitKey(30);
-		if ((capVid.get(CV_CAP_PROP_POS_FRAMES) + 1) < capVid.get(CV_CAP_PROP_FRAME_COUNT)) {
+		if ((capVid.get(CV_CAP_PROP_POS_FRAMES) + 1) < capVid.get(CV_CAP_PROP_FRAME_COUNT))
+		{
 			capVid.read(imgFrame1);
 		}
-		else {
+		else 
+		{
 			std::cout << "end of video\n";
 			break;
 		}
@@ -263,7 +256,7 @@ int main()
 	}
 
 	if (EscKeyCheck != 27)
-	{               // if the user did not press esc (i.e. we reached the end of the video)
+	{											// if the user did not press esc (i.e. we reached the end of the video)
 		cv::waitKey(0);                         // hold the windows open to allow the "end of video" message to show
 	}
 
