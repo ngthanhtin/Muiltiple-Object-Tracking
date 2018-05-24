@@ -1,7 +1,6 @@
 #pragma once
 #include "Kalman.h"
-#include "HungarianAlg.h"
-#include "ASS.h"
+#include "Hungarian.h"
 #include "opencv2/opencv.hpp"
 #include <iostream>
 #include <vector>
@@ -25,19 +24,11 @@ public:
 class CTracker
 {
 public:
-	
-	
 	float dt; 
-
 	float Accel_noise_mag;
-
-	
 	double dist_thres;
-
 	int maximum_allowed_skipped_frames;
-
 	int max_trace_length;
-
 	vector<CTrack*> tracks;
 	void Update(vector<Point2f>& detections);
 	CTracker(float _dt,

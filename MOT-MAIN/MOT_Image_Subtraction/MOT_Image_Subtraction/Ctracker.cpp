@@ -55,27 +55,21 @@ void CTracker::Update(vector<Point2f>& detections)
 		}	
 	}
 
-	// -----------------------------------
-	// «десь треки уже есть в любом случае
-	// -----------------------------------
-	int N=tracks.size();		// треки
-	int M=detections.size();	// детекты
+	int N=tracks.size();		// the number of tracks
+	int M=detections.size();	// the number of points detected
 
-	// ћатрица рассто¤ний от N-ного трека до M-ного детекта.
+	// Matrix distance from track N-th to point detected M-th
 	vector< vector<double> > Cost(N,vector<double>(M));
-	vector<int> assignment; // назначени¤
+	vector<int> assignment; // matrix used to determine N-th track will be join with point detected M-th based on Hungarian algorithm
 
-	// -----------------------------------
-	// “реки уже есть, составим матрицу рассто¤ний
-	// -----------------------------------
+	// matrix distance
 	double dist;
 	for(int i=0;i<tracks.size();i++)
 	{	
-		// Point2d prediction=tracks[i]->prediction;
-		// cout << prediction << endl;
 		for(int j=0;j<detections.size();j++)
 		{
 			Point2d diff=(tracks[i]->prediction-detections[j]);
+			//euclid distance
 			dist=sqrtf(diff.x*diff.x+diff.y*diff.y);
 			Cost[i][j]=dist;
 		}
@@ -85,24 +79,22 @@ void CTracker::Update(vector<Point2f>& detections)
 	// -----------------------------------
 	//AssignmentProblemSolver APS;
 	//APS.Solve(Cost,assignment,AssignmentProblemSolver::optimal);
-	ASS APS;
+	Hungarian APS;
 	APS.Solve(Cost, assignment);
 	// -----------------------------------
 	// clean assignment from pairs with large distance
 	// -----------------------------------
 	// Not assigned tracks
-	vector<int> not_assigned_tracks;
-
 	for(int i=0;i<assignment.size();i++)
 	{
-		if(assignment[i]!=-1 && assignment[i] < Cost[0].size())
+		if(assignment[i] >= 0 && assignment[i] < M)
 		{
-			if(Cost[i][assignment[i]]>dist_thres)
+			if(Cost[i][assignment[i]] > dist_thres)
 			{
 				assignment[i]=-1;
 				// Mark unassigned tracks, and increment skipped frames counter,
 				// when skipped frames counter will be larger than threshold, track will be deleted.
-				not_assigned_tracks.push_back(i);
+				tracks[i]->skipped_frames++;
 			}
 		}
 		else
@@ -110,7 +102,6 @@ void CTracker::Update(vector<Point2f>& detections)
 			// If track have no assigned detect, then increment skipped frames counter.
 			tracks[i]->skipped_frames++;
 		}
-
 	}
 
 	// -----------------------------------
@@ -118,7 +109,7 @@ void CTracker::Update(vector<Point2f>& detections)
 	// -----------------------------------
 	for(int i=0;i<tracks.size();i++)
 	{
-		if(tracks[i]->skipped_frames>maximum_allowed_skipped_frames)
+		if(tracks[i]->skipped_frames > maximum_allowed_skipped_frames)
 		{
 			delete tracks[i];
 			tracks.erase(tracks.begin()+i);
@@ -160,10 +151,10 @@ void CTracker::Update(vector<Point2f>& detections)
 
 		tracks[i]->KF->GetPrediction();
 
-		if(assignment[i]!=-1 && assignment[i] < Cost[0].size()) // If we have assigned detect, then update using its coordinates,
+		if(assignment[i] >= 0 && assignment[i] < M) // If we have assigned detect, then update using its coordinates,
 		{
 			tracks[i]->skipped_frames=0;
-			tracks[i]->prediction=tracks[i]->KF->Update(detections[assignment[i]],1);
+			tracks[i]->prediction=tracks[i]->KF->Update(detections[assignment[i]], 1);
 		}else				  // if not continue using predictions
 		{
 			tracks[i]->prediction=tracks[i]->KF->Update(Point2f(0,0),0);	
