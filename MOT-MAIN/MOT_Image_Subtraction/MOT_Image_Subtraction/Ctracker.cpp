@@ -155,7 +155,8 @@ void CTracker::Update(vector<Point2f>& detections)
 		{
 			tracks[i]->skipped_frames=0;
 			tracks[i]->prediction=tracks[i]->KF->Update(detections[assignment[i]], 1);
-		}else				  // if not continue using predictions
+		}
+		else				  // if not continue using predictions
 		{
 			tracks[i]->prediction=tracks[i]->KF->Update(Point2f(0,0),0);	
 		}
