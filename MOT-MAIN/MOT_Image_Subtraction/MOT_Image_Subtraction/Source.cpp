@@ -52,7 +52,7 @@ public:
 int main()
 {
 	// name of the video
-	char *fn = "in2.mp4";
+	char *fn = "in.avi";
 	CTracker tracker(0.2, 0.5, 60.0, 10, 30);
 	//used to store points detected.
 	vector<Point2f> centers;
